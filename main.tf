@@ -2,27 +2,27 @@ provider "aws" {
   region = var.region
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
+resource "aws_iam_role" "test_role" {
+  name = "test_role"
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"] # Canonical
-}
-
-resource "aws_instance" "ubuntu" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+  permissions_boundary =         "arn:aws:iam::123456789012:policy/oxy-secpol-liteadmin-sandbox-permissions-boundary"
 
   tags = {
-    Name = var.instance_name
+    tag-key = "tag-value"
   }
 }
